@@ -21,7 +21,7 @@ permissions:
 env:
   NIM_VERSION: 2.2.12
   RATTLER_BUILD_VERSION: 0.44.0
-  PREFIX_CHANNEL: nandi-conda
+  PREFIX_CHANNEL: nandi-testing
 
 concurrency:
   group: release-${{ github.ref }}

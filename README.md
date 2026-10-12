@@ -55,8 +55,8 @@ updated in place with
 publish is marked as the repository's latest release, and every AppImage
 updates to whichever build was published most recently.
 The same workflow publishes the AppDir as a conda package to the
-[`nandi-conda`](https://prefix.dev/channels/nandi-conda) prefix.dev channel
-(`pixi global install -c https://prefix.dev/nandi-conda clonim`); see
+[`nandi-testing`](https://prefix.dev/channels/nandi-testing) prefix.dev channel
+(`pixi global install -c https://prefix.dev/nandi-testing clonim`); see
 `packaging/conda/recipe.yaml`.
 
 Source-level libraries are loaded explicitly. Use
