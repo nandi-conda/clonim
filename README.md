@@ -54,6 +54,10 @@ updated in place with
 (`appimageupdatetool clonim-linux-x86_64.AppImage`) or Gear Lever. Every
 publish is marked as the repository's latest release, and every AppImage
 updates to whichever build was published most recently.
+The same workflow publishes the AppDir as a conda package to the
+[`nandi-conda`](https://prefix.dev/channels/nandi-conda) prefix.dev channel
+(`pixi global install -c https://prefix.dev/nandi-conda clonim`); see
+`packaging/conda/recipe.yaml`.
 
 Source-level libraries are loaded explicitly. Use
 `(require '[clonim.core :refer [now-ms]])` to load `stdlib/clonim/core.clj`. Host-dependent operations remain small runtime primitives; for

@@ -15,9 +15,13 @@ on:
 
 permissions:
   contents: write
+  # Trusted publishing of the conda package to prefix.dev
+  id-token: write
 
 env:
   NIM_VERSION: 2.2.12
+  RATTLER_BUILD_VERSION: 0.44.0
+  PREFIX_CHANNEL: nandi-conda
 
 concurrency:
   group: release-${{ github.ref }}
@@ -179,6 +183,37 @@ jobs:
               clonim.AppDir clonim-linux-x86_64.AppImage
           )
           test -f dist/clonim-linux-x86_64.AppImage.zsync
+
+      # The conda package repackages the AppDir assembled above. Version tags
+      # publish that version; pushes to main publish the version in
+      # clonim.nimble. The run number is the build number, so the most recent
+      # build of a version is the one that installs.
+      - name: Build conda package
+        env:
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+          CLONIM_BUILD_NUMBER: ${{ github.run_number }}
+        run: |
+          if [[ "$RELEASE_TAG" == "release" ]]; then
+            CLONIM_VERSION=$(sed -n 's/^version *= *"\(.*\)"/\1/p' clonim.nimble)
+          else
+            CLONIM_VERSION=${RELEASE_TAG#v}
+          fi
+          test -n "$CLONIM_VERSION"
+          export CLONIM_VERSION
+          curl --fail --location --silent --show-error \
+            "https://github.com/prefix-dev/rattler-build/releases/download/v${RATTLER_BUILD_VERSION}/rattler-build-x86_64-unknown-linux-musl" \
+            -o /tmp/rattler-build
+          chmod +x /tmp/rattler-build
+          /tmp/rattler-build build --recipe packaging/conda/recipe.yaml \
+            --output-dir dist/conda --log-style plain
+
+      # Authenticates with GitHub's OIDC token (trusted publishing), which
+      # prefix.dev must be configured to accept for this repository and
+      # workflow.
+      - name: Publish conda package to prefix.dev
+        run: |
+          /tmp/rattler-build upload prefix --skip-existing \
+            --channel "$PREFIX_CHANNEL" dist/conda/linux-64/*.conda
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4

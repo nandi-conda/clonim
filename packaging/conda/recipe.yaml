@@ -1,0 +1,40 @@
+# Repackages the AppImage's AppDir (dist/clonim.AppDir, assembled by the
+# release workflow) as a conda package. The AppDir is self-contained: it
+# carries the release compiler, its runtime archive and REPL host, Nim and the
+# Zig toolchain, so the package needs nothing else from the environment.
+# CLONIM_VERSION and CLONIM_BUILD_NUMBER are set by the workflow.
+context:
+  version: ${{ env.get("CLONIM_VERSION") }}
+  build_number: ${{ env.get("CLONIM_BUILD_NUMBER", default="0") }}
+
+package:
+  name: clonim
+  version: ${{ version }}
+
+source:
+  path: ../../dist/clonim.AppDir
+  use_gitignore: false
+
+build:
+  number: ${{ build_number | int }}
+  script:
+    - mkdir -p "$PREFIX/lib/clonim" "$PREFIX/bin"
+    - cp -a . "$PREFIX/lib/clonim/"
+    - install -m755 "$RECIPE_DIR/clonim.sh" "$PREFIX/bin/clonim"
+  # Ship the AppDir's binaries untouched: they find each other relative to
+  # themselves and must not be relinked against the environment.
+  dynamic_linking:
+    binary_relocation: false
+  prefix_detection:
+    ignore: true
+
+tests:
+  - script:
+      - echo '(println (+ 1 2))' > t.clj
+      - test "$(clonim run t.clj)" = 3
+
+about:
+  homepage: https://github.com/nandi-conda/clonim
+  repository: https://github.com/nandi-conda/clonim
+  license: MIT
+  summary: A Clojure compiler hosted on Nim
